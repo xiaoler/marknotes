@@ -3,12 +3,14 @@
     windows_subsystem = "windows"
 )]
 
+mod menu;
 use tauri::{Manager, Wry};
 
 fn main() {
     let context = tauri::generate_context!();
     tauri::Builder::default()
-        .menu(tauri::Menu::os_default(&context.package_info().name))
+        .menu(menu::item(&context.package_info().name))
+        .on_menu_event(|event| menu::event_handler(event))
         .setup(|app| Ok(set_window(app)))
         .run(context)
         .expect("error while running tauri application");
@@ -23,5 +25,3 @@ fn set_window(app: &mut tauri::App<Wry>) {
         })))
         .expect("Failed to set min size");
 }
-
-fn set_menu() {}
