@@ -23,7 +23,6 @@ export default class App extends React.Component {
     public render() {
         return (
             <Textarea
-                className="textarea"
                 w="100%"
                 h="100vh"
                 value={this.state.value}
