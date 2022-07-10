@@ -1,4 +1,15 @@
-use tauri::{AboutMetadata, CustomMenuItem, Menu, MenuItem, Submenu, WindowMenuEvent, Wry};
+use std::path::PathBuf;
+
+use tauri::api::dialog::FileDialogBuilder;
+use tauri::api::file;
+use tauri::{AboutMetadata, CustomMenuItem, Menu, MenuItem, Submenu, Window, WindowMenuEvent, Wry};
+
+// the payload type must implement `Serialize` and `Clone`.
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    // path: String,
+    content: String,
+}
 
 pub fn item(#[allow(unused)] app_name: &str) -> tauri::Menu {
     let mut menu = Menu::new();
@@ -83,11 +94,32 @@ pub fn item(#[allow(unused)] app_name: &str) -> tauri::Menu {
 pub fn event_handler(event: WindowMenuEvent<Wry>) {
     match event.menu_item_id() {
         "open_file" => {
-            // std::process::exit(0);
+            FileDialogBuilder::new().pick_file(move |file_path| match file_path {
+                Some(file_path) => {
+                    let window = event.window();
+                    event_open_file(window, file_path);
+                }
+                None => {
+                    println!("cancelled");
+                }
+            });
         }
         "save_file" => {
             // event.window().close().unwrap();
         }
         _ => {}
     }
+}
+
+fn event_open_file(window: &Window, file_path: PathBuf) {
+    let text = file::read_string(file_path).unwrap();
+    window
+        .emit(
+            "open_file",
+            Payload {
+                // path: file_path.into_os_string().into_string().unwrap(),
+                content: text.into(),
+            },
+        )
+        .unwrap();
 }
