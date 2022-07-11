@@ -7,7 +7,7 @@ use tauri::{AboutMetadata, CustomMenuItem, Menu, MenuItem, Submenu, Window, Wind
 // the payload type must implement `Serialize` and `Clone`.
 #[derive(Clone, serde::Serialize)]
 struct Payload {
-    // path: String,
+    path: String,
     content: String,
 }
 
@@ -96,8 +96,7 @@ pub fn event_handler(event: WindowMenuEvent<Wry>) {
         "open_file" => {
             FileDialogBuilder::new().pick_file(move |file_path| match file_path {
                 Some(file_path) => {
-                    let window = event.window();
-                    event_open_file(window, file_path);
+                    event_open_file(event.window(), file_path.to_str().unwrap());
                 }
                 None => {
                     println!("cancelled");
@@ -111,13 +110,13 @@ pub fn event_handler(event: WindowMenuEvent<Wry>) {
     }
 }
 
-fn event_open_file(window: &Window, file_path: PathBuf) {
+fn event_open_file(window: &Window, file_path: &str) {
     let text = file::read_string(file_path).unwrap();
     window
         .emit(
             "open_file",
             Payload {
-                // path: file_path.into_os_string().into_string().unwrap(),
+                path: file_path.to_string(),
                 content: text.into(),
             },
         )
