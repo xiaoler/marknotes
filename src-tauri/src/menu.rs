@@ -1,3 +1,5 @@
+use std::fs::File;
+
 use tauri::api::dialog::FileDialogBuilder;
 use tauri::api::file;
 use tauri::{AboutMetadata, CustomMenuItem, Menu, MenuItem, Submenu, Window, WindowMenuEvent, Wry};
@@ -32,11 +34,16 @@ pub fn item(#[allow(unused)] app_name: &str) -> tauri::Menu {
     }
 
     let file_menu = Menu::new()
-        .add_item(CustomMenuItem::new("create_file".to_string(), "新建..."))
-        .add_item(CustomMenuItem::new("save_file".to_string(), "保存"))
-        .add_item(CustomMenuItem::new("save_file_as".to_string(), "另存为..."))
+        .add_item(CustomMenuItem::new("new_file".to_string(), "新建...").accelerator("CmdOrCtrl+N"))
+        .add_item(CustomMenuItem::new("save_file".to_string(), "保存").accelerator("CmdOrCtrl+S"))
+        .add_item(
+            CustomMenuItem::new("save_file_as".to_string(), "另存为...")
+                .accelerator("CmdOrCtrl+Shift+S"),
+        )
         .add_native_item(MenuItem::Separator)
-        .add_item(CustomMenuItem::new("open_file".to_string(), "打开..."))
+        .add_item(
+            CustomMenuItem::new("open_file".to_string(), "打开...").accelerator("CmdOrCtrl+O"),
+        )
         .add_native_item(MenuItem::Separator)
         .add_native_item(MenuItem::CloseWindow);
 
@@ -91,6 +98,14 @@ pub fn item(#[allow(unused)] app_name: &str) -> tauri::Menu {
 
 pub fn event_handler(event: WindowMenuEvent<Wry>) {
     match event.menu_item_id() {
+        "new_file" => FileDialogBuilder::new().save_file(|file_path| match file_path {
+            Some(file_path) => {
+                File::create(file_path).unwrap();
+            }
+            None => {
+                println!("cancelled");
+            }
+        }),
         "open_file" => {
             FileDialogBuilder::new().pick_file(move |file_path| match file_path {
                 Some(file_path) => {
