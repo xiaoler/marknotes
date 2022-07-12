@@ -37,7 +37,7 @@ pub fn item(#[allow(unused)] app_name: &str) -> tauri::Menu {
         .add_item(CustomMenuItem::new("new_file".to_string(), "新建...").accelerator("CmdOrCtrl+N"))
         .add_item(CustomMenuItem::new("save_file".to_string(), "保存").accelerator("CmdOrCtrl+S"))
         .add_item(
-            CustomMenuItem::new("save_file_as".to_string(), "另存为...")
+            CustomMenuItem::new("save_as".to_string(), "另存为...")
                 .accelerator("CmdOrCtrl+Shift+S"),
         )
         .add_native_item(MenuItem::Separator)
@@ -98,14 +98,18 @@ pub fn item(#[allow(unused)] app_name: &str) -> tauri::Menu {
 
 pub fn event_handler(event: WindowMenuEvent<Wry>) {
     match event.menu_item_id() {
-        "new_file" => FileDialogBuilder::new().save_file(|file_path| match file_path {
-            Some(file_path) => {
-                File::create(file_path).unwrap();
-            }
-            None => {
-                println!("cancelled");
-            }
-        }),
+        "new_file" => {
+            FileDialogBuilder::new()
+                .set_file_name("Untitled.txt")
+                .save_file(|file_path| match file_path {
+                    Some(file_path) => {
+                        File::create(file_path).unwrap();
+                    }
+                    None => {
+                        println!("cancelled");
+                    }
+                });
+        }
         "open_file" => {
             FileDialogBuilder::new().pick_file(move |file_path| match file_path {
                 Some(file_path) => {
@@ -117,7 +121,10 @@ pub fn event_handler(event: WindowMenuEvent<Wry>) {
             });
         }
         "save_file" => {
-            // event.window().close().unwrap();
+            event.window().emit("save_file", {}).unwrap();
+        }
+        "save_as" => {
+            //
         }
         _ => {}
     }
@@ -133,5 +140,9 @@ fn event_open_file(window: &Window, file_path: &str) {
                 content: text.into(),
             },
         )
+        .unwrap();
+    // 设置窗口名称
+    window
+        .set_title(file_path.split("/").last().unwrap())
         .unwrap();
 }
