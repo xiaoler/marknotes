@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use tauri::api::dialog::FileDialogBuilder;
 use tauri::api::file;
 use tauri::{AboutMetadata, CustomMenuItem, Menu, MenuItem, Submenu, Window, WindowMenuEvent, Wry};

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Textarea } from "@chakra-ui/react";
-import { listen } from "@tauri-apps/api/event";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 interface Payload {
     path: string;
     content: string;
@@ -12,6 +12,8 @@ export default class App extends React.Component {
     };
 
     async componentDidMount() {
+        // 如果触发了两次事件，不必惊慌
+        // https://juejin.cn/post/6844904084768587790
         await listen("open_file", (event) => {
             let path = (event.payload as Payload).path;
             console.log(path);
