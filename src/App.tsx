@@ -1,7 +1,9 @@
 import * as React from "react";
 import { Textarea } from "@chakra-ui/react";
 import { listen } from "@tauri-apps/api/event";
-// import { writeTextFile, BaseDirectory } from "@tauri-apps/api/fs";
+import { writeTextFile, BaseDirectory } from "@tauri-apps/api/fs";
+import { dialog } from "@tauri-apps/api";
+import { appWindow } from "@tauri-apps/api/window";
 
 interface Payload {
     path: string;
@@ -20,15 +22,11 @@ export default class App extends React.Component {
         // https://juejin.cn/post/6844904084768587790
         await listen("open_file", (event) => {
             this.filePath = (event.payload as Payload).path;
-            console.log(this.filePath);
             let text = (event.payload as Payload).content;
             this.setState({ value: text });
         });
-
-        /*
-        // 前端API保存文件有目录限制
+        // save file
         listen("save_file", async () => {
-            console.log("save_file tiggered");
             if (this.filePath === "") {
                 return;
             }
@@ -36,7 +34,22 @@ export default class App extends React.Component {
                 dir: BaseDirectory.Download,
             });
         });
-        */
+        // save file as
+        listen("save_as", async () => {
+            if (this.filePath === "") {
+                this.filePath = await dialog.save();
+            } else {
+                this.filePath = await dialog.save({
+                    defaultPath: this.filePath,
+                });
+            }
+            // 写入文件
+            await writeTextFile(this.filePath, this.state.value, {
+                dir: BaseDirectory.Download,
+            });
+            // 修改窗口标题
+            appWindow.setTitle(this.filePath.split("/").pop() as string);
+        });
     }
 
     public render() {

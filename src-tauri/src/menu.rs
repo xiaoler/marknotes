@@ -124,7 +124,7 @@ pub fn event_handler(event: WindowMenuEvent<Wry>) {
             event.window().emit("save_file", {}).unwrap();
         }
         "save_as" => {
-            //
+            event.window().emit("save_as", {}).unwrap();
         }
         _ => {}
     }
