@@ -18,7 +18,7 @@ export default class App extends React.Component {
     filePath: string = "";
 
     async componentDidMount() {
-        // 如果触发了两次事件，不必惊慌
+        // 如果触发了两次事件，看这里
         // https://juejin.cn/post/6844904084768587790
         await listen("open_file", (event) => {
             this.filePath = (event.payload as Payload).path;
@@ -31,21 +31,19 @@ export default class App extends React.Component {
                 return;
             }
             await writeTextFile(this.filePath, this.state.value, {
-                dir: BaseDirectory.Download,
+                dir: BaseDirectory.Home,
             });
         });
         // save file as
         listen("save_as", async () => {
-            if (this.filePath === "") {
-                this.filePath = await dialog.save();
-            } else {
-                this.filePath = await dialog.save({
-                    defaultPath: this.filePath,
-                });
+            let opt = {};
+            if (this.filePath !== "") {
+                opt = { defaultPath: this.filePath };
             }
+            this.filePath = await dialog.save(opt);
             // 写入文件
             await writeTextFile(this.filePath, this.state.value, {
-                dir: BaseDirectory.Download,
+                dir: BaseDirectory.Home,
             });
             // 修改窗口标题
             appWindow.setTitle(this.filePath.split("/").pop() as string);
