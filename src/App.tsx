@@ -2,7 +2,7 @@ import * as React from "react";
 import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
 import { listen } from "@tauri-apps/api/event";
-import { writeTextFile, BaseDirectory } from "@tauri-apps/api/fs";
+import { writeTextFile, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 import { dialog } from "@tauri-apps/api";
 import { appWindow } from "@tauri-apps/api/window";
 import "bytemd/dist/index.css";
@@ -24,40 +24,93 @@ export default class App extends React.Component {
         fullscreen: "全屏",
     };
 
+    allowFolders = {
+        dir: BaseDirectory.Home,
+    };
+
     filePath: string = "";
 
     async componentDidMount() {
-        await appWindow.onMenuClicked(({ payload: menuId }) => {
-            console.log("Menu clicked: " + menuId);
+        await appWindow.onMenuClicked(async ({ payload: menuId }) => {
+            console.log(menuId);
+            switch (menuId) {
+                case "new_file":
+                    this.newFile();
+                    break;
+                case "open_file":
+                    this.openFile();
+                    break;
+                case "save_file":
+                    await this.saveFile();
+                    break;
+                case "save_file_as":
+                    await this.saveFileAs();
+                    break;
+                default:
+                    break;
+            }
         });
-        // 如果触发了两次事件，看这里
+        // 使用React StrictMode 会触发两次事件
         // https://juejin.cn/post/6844904084768587790
         await listen("open_file", (event) => {
             this.filePath = (event.payload as Payload).path;
             let text = (event.payload as Payload).content;
             this.setState({ value: text });
         });
-        // save file
-        listen("save_file", async () => {
-            if (this.filePath === "") {
-                return await this.saveFileAs({});
-            }
-            await writeTextFile(this.filePath, this.state.value, {
-                dir: BaseDirectory.Home,
-            });
-        });
-        // save file as
-        listen("save_as", async () => {
-            let opt = {};
-            if (this.filePath !== "") {
-                opt = { defaultPath: this.filePath };
-            }
-            await this.saveFileAs(opt);
-        });
     }
 
-    async saveFileAs(opt: dialog.SaveDialogOptions) {
-        this.filePath = await dialog.save(opt);
+    async newFile() {
+        try {
+            return await this.saveAs();
+        } catch (e) {
+            return;
+        }
+    }
+
+    async openFile() {
+        const selected = await dialog.open({
+            directory: false,
+            multiple: false,
+            // filters: [],
+            // defaultPath: await homeDir(),
+        });
+        if (selected !== null) {
+            this.filePath = selected as string;
+            let text = await readTextFile(this.filePath, this.allowFolders);
+            this.setState({ value: text });
+        } else {
+            // user cancelled the selection
+        }
+    }
+
+    async saveFile() {
+        if (!this.filePath) {
+            try {
+                return await this.saveAs();
+            } catch (e) {
+                return;
+            }
+        }
+        await writeTextFile(this.filePath, this.state.value, this.allowFolders);
+    }
+
+    async saveFileAs() {
+        let opt = {};
+        if (!this.filePath) {
+            opt = { defaultPath: this.filePath };
+        }
+        await this.saveAs(opt);
+    }
+
+    async saveAs(opt?: dialog.SaveDialogOptions) {
+        if (!opt) {
+            opt = { defaultPath: "Untitled.md" };
+        }
+        try {
+            this.filePath = await dialog.save(opt);
+        } catch (e) {
+            return;
+        }
         // 写入文件
         await writeTextFile(this.filePath, this.state.value, {
             dir: BaseDirectory.Home,
@@ -74,6 +127,7 @@ export default class App extends React.Component {
                 value={this.state.value}
                 plugins={this.plugins}
                 onChange={(v) => this.setState({ value: v })}
+                placeholder={"请输入……"}
             />
         );
     }

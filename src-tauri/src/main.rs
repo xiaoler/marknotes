@@ -10,7 +10,6 @@ fn main() {
     let context = tauri::generate_context!();
     tauri::Builder::default()
         .menu(menu::item(&context.package_info().name))
-        .on_menu_event(|event| menu::event_handler(event))
         .setup(|app| Ok(set_window(app)))
         .run(context)
         .expect("error while running tauri application");
