@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
-import { listen } from "@tauri-apps/api/event";
+import highlight from "@bytemd/plugin-highlight";
 import { writeTextFile, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 import { dialog } from "@tauri-apps/api";
 import { appWindow } from "@tauri-apps/api/window";
 import "bytemd/dist/index.css";
+import "github-markdown-css/github-markdown-light.css";
 import "./App.css";
 
 interface Payload {
@@ -18,7 +19,7 @@ export default class App extends React.Component {
         value: "",
     };
 
-    plugins = [gfm()];
+    plugins = [gfm(), highlight()];
 
     locale = {
         fullscreen: "全屏",
@@ -32,7 +33,6 @@ export default class App extends React.Component {
 
     async componentDidMount() {
         await appWindow.onMenuClicked(async ({ payload: menuId }) => {
-            console.log(menuId);
             switch (menuId) {
                 case "new_file":
                     this.newFile();
@@ -53,9 +53,6 @@ export default class App extends React.Component {
 
         await appWindow.onFileDropEvent(async (event) => {
             if (event.payload.type === "drop") {
-                if (event.payload.paths.length !== 1) {
-                    return;
-                }
                 this.filePath = event.payload.paths[0];
                 let text = await readTextFile(this.filePath, this.allowFolders);
                 this.setState({ value: text });

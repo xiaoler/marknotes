@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@bytemd/plugin-gfm": "^1.17.1",
+    "@bytemd/plugin-highlight": "^1.17.1",
     "@bytemd/react": "^1.17.1",
     "@tauri-apps/api": "^1.0.1",
     "bytemd": "^1.17.1",
+    "github-markdown-css": "^5.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
