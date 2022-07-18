@@ -50,12 +50,18 @@ export default class App extends React.Component {
                     break;
             }
         });
-        // 使用React StrictMode 会触发两次事件
-        // https://juejin.cn/post/6844904084768587790
-        await listen("open_file", (event) => {
-            this.filePath = (event.payload as Payload).path;
-            let text = (event.payload as Payload).content;
-            this.setState({ value: text });
+
+        await appWindow.onFileDropEvent(async (event) => {
+            if (event.payload.type === "drop") {
+                if (event.payload.paths.length !== 1) {
+                    return;
+                }
+                this.filePath = event.payload.paths[0];
+                let text = await readTextFile(this.filePath, this.allowFolders);
+                this.setState({ value: text });
+            } else {
+                console.log("File drop cancelled");
+            }
         });
     }
 
