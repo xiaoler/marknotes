@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
-import highlight from "@bytemd/plugin-highlight";
+// import highlight from "@bytemd/plugin-highlight";
 import { writeTextFile, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 import { dialog } from "@tauri-apps/api";
 import { appWindow } from "@tauri-apps/api/window";
@@ -19,7 +19,7 @@ export default class App extends React.Component {
         value: "",
     };
 
-    plugins = [gfm(), highlight()];
+    plugins = [gfm() /* highlight() */];
 
     locale = {
         fullscreen: "全屏",
